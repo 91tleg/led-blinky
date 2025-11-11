@@ -1,0 +1,1 @@
+https://docs.espressif.com/projects/rust/esp-hal/1.0.0-rc.0/esp32s3/esp_hal/index.html
