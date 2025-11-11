@@ -1,5 +1,10 @@
+use esp_hal::gpio::{Input, Output};
 
-/// Trait defining basic GPIO operations
+pub enum GpioMode<'a> {
+    Input(Input<'a>),
+    Output(Output<'a>),
+}
+
 pub trait GpioBase {
     /// Set the pin level (0 = low, 1 = high)
     fn set_level(&mut self, level: u8);
