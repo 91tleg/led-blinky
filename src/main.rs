@@ -6,26 +6,13 @@
     holding buffers for the duration of a data transfer."
 )]
 
-mod drv {
-    pub mod gpio {
-        pub mod gpio_base;
-        pub mod gpio;
-    }
-}
-use drv::gpio::gpio::{Gpio};
-use drv::gpio::gpio_base::GpioBase;
-use esp_hal::{ gpio::{Io, Level, Output, OutputConfig}, };
+mod drv;
+use drv::gpio::gpio::Gpio;
+use drv::gpio::gpio_base::GpioMode;
+use esp_hal::gpio::{Level, Output, OutputConfig};
 
-mod mdl {
-    pub mod led {
-        pub mod led_task;
-    }
-}
+mod mdl;
 use mdl::led::led_task::led_task;
-
-
-
-
 
 use defmt::info;
 
@@ -41,7 +28,7 @@ use esp_hal::clock::CpuClock;
 // TimerGroup gives access to hardware timers (used by the RTOS).
 use esp_hal::timer::timg::TimerGroup;
 
-//Hhandles Wi-Fi and Bluetooth functionality.
+//Handles Wi-Fi and Bluetooth functionality.
 use esp_radio::ble::controller::BleConnector;
 
 // esp_backtrace provides backtrace and panic support. esp_println gives you printing macros (compatible with no_std).
@@ -63,7 +50,7 @@ async fn main(spawner: Spawner) -> ! {
 
     esp_alloc::heap_allocator!(#[esp_hal::ram(reclaimed)] size: 73744); // Creates a heap in reclaimed RAM
     // COEX needs more RAM - so we've added some more
-    esp_alloc::heap_allocator!(size: 64 * 1024); // Adds extra heap
+    esp_alloc::heap_allocator!(size: 64 * 1024);
 
     // Start RTOS scheduler
     let timg0 = TimerGroup::new(peripherals.TIMG0);
@@ -78,12 +65,14 @@ async fn main(spawner: Spawner) -> ! {
             .expect("Failed to initialize Wi-Fi controller");
     let _connector = BleConnector::new(&radio_init, peripherals.BT, Default::default());
 
-    
     // TODO: Spawn some tasks
     //let _ = spawner;
-    let led_pin: Output<'static> = Output::new(peripherals.GPIO0, Level::Low, OutputConfig::default());
-    let led: Gpio<'static> = Gpio::new(led_pin);
-    spawner.spawn(led_task(led)).expect("Failed to spawn LED blink task");
+    let led_pin: Output<'static> =
+        Output::new(peripherals.GPIO0, Level::Low, OutputConfig::default());
+    let led: Gpio<'static> = Gpio::new_output(led_pin);
+    spawner
+        .spawn(led_task(led))
+        .expect("Failed to spawn LED blink task");
 
     loop {
         info!("Hello world!");
